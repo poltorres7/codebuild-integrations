@@ -5,6 +5,7 @@ phases:
     runtime-versions:
       java: corretto8
   pre_build:
+    commands:
     - cd my-app/
   build:
     commands:
