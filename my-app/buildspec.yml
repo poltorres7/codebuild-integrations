@@ -15,8 +15,10 @@ phases:
     commands:
       - echo Build completed on `date`
       - mvn package
+      - ls -la 
+      - la -la ../
 artifacts:
   files:
-    - target/my-app-1.0-SNAPSHOT.jar
-    - appspec.yml
+    - my-app/target/my-app-1.0-SNAPSHOT.jar
+    - my-app/appspec.yml
   discard-paths: yes
