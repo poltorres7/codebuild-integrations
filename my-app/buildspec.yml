@@ -4,18 +4,18 @@ phases:
   install:
     runtime-versions:
       java: corretto8
+  pre-build:
+    - cd my-app/
   build:
     commands:
       - echo Build started on `date`
-      - cd my-app/
       - mvn test 
   post_build:
     commands:
       - echo Build completed on `date`
-      - cd my-app/
       - mvn package
 artifacts:
   files:
-    - my-app/target/my-app-1.0-SNAPSHOT.jar
-    - my-app/appspec.yml
+    - target/my-app-1.0-SNAPSHOT.jar
+    - appspec.yml
   discard-paths: yes
