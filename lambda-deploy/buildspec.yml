@@ -1,0 +1,19 @@
+version: 0.2
+
+env:
+  variables:
+    build_version: "0.1"
+
+phases:
+  install:
+    commands:
+      - curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.34.0/install.sh | bash
+      - . ~/.nvm/nvm.sh
+#      - nvm install node
+  pre_build:
+    commands:
+      - echo "===== Hello from codebuild ===="
+      - npm --version
+  build:
+    commands:
+      - echo "==== Deploying ===="

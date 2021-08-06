@@ -1,0 +1,19 @@
+version: 0.2
+
+env:
+  variables:
+    build_version: "0.1"
+
+phases:
+  install:
+    commands:
+      - curl -L -O https://github.com/aws/aws-sam-cli/releases/latest/download/aws-sam-cli-linux-x86_64.zip
+      - unzip aws-sam-cli-linux-x86_64.zip -d sam-installation
+      - ./sam-installation/install
+      - sam --version
+  pre_build:
+    commands:
+      - echo "===== Hello from codebuild ===="
+  build:
+    commands:
+      - echo "==== Deploying ===="

@@ -1,0 +1,59 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Metadata:
+  Course: Codebuild automation
+Description: Creates a codebuild to deploy lambdas
+
+Parameters:
+  Env:
+    Type: String
+
+Resources:
+  CodebuildSamDeploy:
+    Type: AWS::CodeBuild::Project
+    Properties:
+      Artifacts:
+        Type: NO_ARTIFACTS
+      Name: lambda deploy
+      ConcurrentBuildLimit: 10
+      Description: "Codebuild to deploy lambda"
+      Environment:
+        ComputeType: BUILD_GENERAL1_SMALL
+        Image: aws/codebuild/
+        Type: LINUX_CONTAINER
+      LogsConfig: 
+        CloudWatchLogs:
+          Status: ENABLED
+          GroupName: lambda-deploy-log
+      QueuedTimeoutInMinutes: 5
+      ServiceRole: !Ref CodeBuildRole
+      Source: 
+        Type: GitHub
+        Location: 
+      SourceVersion: master
+      Tags: 
+        - Key: Env
+          Value: !Ref Env
+        - Key: Course
+          Value: DevOps
+      TimeoutInMinutes: 3
+      Triggers: 
+        Webhook: true
+        FilterGroups:
+          - - Type: Event
+              Pattern: PUSH
+
+  CodeBuildRole:
+    Type: AWS::IAM::Role
+    Description: Role to be used by codebuild
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+        - Action: sts:AssumeRole
+          Effect: Allow
+          Principal:
+            Service: codebuild.amazonaws.com
+      Path: /
+      RoleName: !Join
+        - '-'
+        - - !Ref 'AWS::StackName'
+          - Lambda deploy
