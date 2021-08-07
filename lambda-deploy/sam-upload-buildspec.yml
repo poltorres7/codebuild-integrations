@@ -4,6 +4,7 @@ env:
   variables:
     build_version: "0.1"
     service: "helloworld"
+    BucketZips: "lambdas-zips-us-east-1-wk3v4d"
 
 phases:
   install:
@@ -20,15 +21,15 @@ phases:
       - cd ../lambdas/hello-world/
   build:
     commands:
-      - echo "==== Deploying ===="
+      - echo "==== Upload ===="
       - |
         sam package \
         --template-file template.yml \
         --output-template-file ${service}.package.yml \
-        --s3-bucket lambdas-zips-us-east-1-wk3v4d \
+        --s3-bucket ${BucketZips} \
         --s3-prefix hello-world
       - |
         aws s3api put-object \
         --body helloworld.package.yml \
-        --bucket lambdas-zips-us-east-1-wk3v4d \
+        --bucket ${BucketZips} \
         --key hello-world/helloworld.package.yml

@@ -135,5 +135,10 @@ Resources:
               - 'logs:PutLogEvents'
             Resource:
               - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:lambda-deploy-log:log-stream:*"
+          - Effect: Allow
+            Action:
+              - 'codestar-connections:UseConnection'
+            Resource:
+              - !Sub "arn:aws:codestar-connections:${AWS::Region}:${AWS::AccountId}:connection/*"
       Roles:
         - !Ref CodeBuildRole
