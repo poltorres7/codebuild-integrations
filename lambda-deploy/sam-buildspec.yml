@@ -13,7 +13,13 @@ phases:
       - sam --version
   pre_build:
     commands:
-      - echo "===== Hello from codebuild ===="
+      - echo "===== Hello from pre build ===="
   build:
     commands:
       - echo "==== Deploying ===="
+      - "aws s3 cp s3://lambdas-zips-us-east-1-wk3v4d/hello-world/helloworld.package.yml  template.package.yml"
+      - |
+        sam deploy --template-file template.package.yml \
+        --stack-name dev-hello-world \
+        --parameter-overrides Env=dev LambdaName=hello-world \
+        --capabilities CAPABILITY_IAM

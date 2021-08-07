@@ -6,47 +6,73 @@ Description: Creates a codebuild to deploy lambdas
 Parameters:
   Env:
     Type: String
+  BuildSpec:
+    Type: String
+    Description: "Path to locate buildSpec"
+  CodeBuildType:
+    Type: String
+    Description: "Type of codebuild to name these codebuild resources"
+  Location:
+    Type: String
+    Description: "Git repository"
+  
 
 Resources:
   CodebuildSamDeploy:
     Type: AWS::CodeBuild::Project
     Properties:
+      Name: !Sub "${Env}-${CodeBuildType}"
+      ServiceRole: !Ref CodeBuildRole
+      Description: !Sub "Codebuild base template for type: ${CodeBuildType}"
+      Source:
+        BuildSpec: !Ref BuildSpec
+        GitCloneDepth: 1
+        GitSubmodulesConfig:
+          FetchSubmodules: false
+        InsecureSsl: false
+        Location: !Ref Location
+        Type: "GITHUB"
+      TimeoutInMinutes: 5
+      QueuedTimeoutInMinutes: 30
       Artifacts:
         Type: NO_ARTIFACTS
-      Name: lambda deploy
-      ConcurrentBuildLimit: 10
-      Description: "Codebuild to deploy lambda"
+      Cache:
+        Type: NO_CACHE
       Environment:
-        ComputeType: BUILD_GENERAL1_SMALL
-        Image: aws/codebuild/
         Type: LINUX_CONTAINER
-      LogsConfig: 
-        CloudWatchLogs:
-          Status: ENABLED
-          GroupName: lambda-deploy-log
-      QueuedTimeoutInMinutes: 5
-      ServiceRole: !Ref CodeBuildRole
-      Source: 
-        Type: GitHub
-        Location: 
-      SourceVersion: master
+        Image: aws/codebuild/standard:5.0
+        ComputeType: BUILD_GENERAL1_SMALL
+        ImagePullCredentialsType: "CODEBUILD"
+        PrivilegedMode: false
+        EnvironmentVariables:
+          -
+            Name: "Env"
+            Type: "PLAINTEXT"
+            Value: !Ref Env
       Tags: 
         - Key: Env
           Value: !Ref Env
         - Key: Course
           Value: DevOps
-      TimeoutInMinutes: 3
-      Triggers: 
-        Webhook: true
-        FilterGroups:
-          - - Type: Event
-              Pattern: PUSH
+      BadgeEnabled: false
+      LogsConfig: 
+        CloudWatchLogs:
+          Status: ENABLED
+          GroupName: lambda-deploy-log
+      ConcurrentBuildLimit: 10
+      SourceVersion: master
+#      Triggers: 
+#        Webhook: true
+#        FilterGroups:
+#          - - Type: Event
+#              Pattern: PUSH
 
   CodeBuildRole:
     Type: AWS::IAM::Role
-    Description: Role to be used by codebuild
     Properties:
+      Description: Role to be used by codebuild
       AssumeRolePolicyDocument:
+        Version: "2012-10-17"
         Statement:
         - Action: sts:AssumeRole
           Effect: Allow
@@ -57,3 +83,33 @@ Resources:
         - '-'
         - - !Ref 'AWS::StackName'
           - Lambda deploy
+  
+#  RootInstanceProfile:
+#    Type: AWS::IAM::InstanceProfile
+#    Properties:
+#      Roles:
+#        - !Ref CodeBuildRole
+  
+  Policy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: !Sub "${Env}-codebuild-${CodeBuildType}-policy"
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action:
+              - 'lambda:CreateAlias'
+              - 'lambda:CreateFunction'
+              - 'lambda:GetFunction'
+              - 'lambda:GetFunctionCodeSigningConfig'
+              - 'lambda:ListTags'
+              - 'lambda:ListVersionsByFunction'
+              - 'lambda:PublishVersion'
+              - 'lambda:TagResource'
+              - 'lambda:UpdateAlias'
+              - 'lambda:UpdateFunctionCode'
+              - 'lambda:UpdateFunctionConfiguration'
+            Resource: !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:*"
+      Roles:
+        - !Ref CodeBuildRole
