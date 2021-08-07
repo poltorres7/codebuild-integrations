@@ -3,6 +3,7 @@ version: 0.2
 env:
   variables:
     build_version: "0.1"
+    service: "helloworld"
 
 phases:
   install:
@@ -14,12 +15,20 @@ phases:
   pre_build:
     commands:
       - echo "===== Hello from pre build ===="
+      - ls -la 
+      - ls -la ../
+      - cd ../lambdas/hello-world/
   build:
     commands:
       - echo "==== Deploying ===="
-      - aws s3 cp s3://lambdas-zips-us-east-1-wk3v4d/hello-world/helloworld.package.yml  template.package.yml
       - |
-        sam deploy --template-file template.package.yml \
-        --stack-name dev-hello-world \
-        --parameter-overrides Env=dev LambdaName=hello-world \
-        --capabilities CAPABILITY_IAM
+        sam package \
+        --template-file template.yml \
+        --output-template-file ${service}.package.yml \
+        --s3-bucket lambdas-zips-us-east-1-wk3v4d \
+        --s3-prefix hello-world
+      - |
+        aws s3api put-object \
+        --body helloworld.package.yml \
+        --bucket lambdas-zips-us-east-1-wk3v4d \
+        --key hello-world/helloworld.package.yml

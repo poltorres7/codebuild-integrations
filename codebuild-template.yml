@@ -15,7 +15,9 @@ Parameters:
   Location:
     Type: String
     Description: "Git repository"
-  
+  SecondaryLocation:
+    Type: String
+    Description: "Git repository"
 
 Resources:
   CodebuildSamDeploy:
@@ -25,13 +27,20 @@ Resources:
       ServiceRole: !Ref CodeBuildRole
       Description: !Sub "Codebuild base template for type: ${CodeBuildType}"
       Source:
+        Type: "GITHUB"
         BuildSpec: !Ref BuildSpec
         GitCloneDepth: 1
         GitSubmodulesConfig:
           FetchSubmodules: false
         InsecureSsl: false
         Location: !Ref Location
-        Type: "GITHUB"
+      SecondarySources:
+        - Type: "GITHUB"
+          Location: !Ref SecondaryLocation
+          GitCloneDepth: 1
+          GitSubmodulesConfig:
+            FetchSubmodules: false
+          SourceIdentifier: "lambdas"
       TimeoutInMinutes: 5
       QueuedTimeoutInMinutes: 30
       Artifacts:
@@ -59,7 +68,7 @@ Resources:
         CloudWatchLogs:
           Status: ENABLED
           GroupName: lambda-deploy-log
-      ConcurrentBuildLimit: 10
+      ConcurrentBuildLimit: 3
       SourceVersion: master
 #      Triggers: 
 #        Webhook: true
@@ -79,10 +88,7 @@ Resources:
           Principal:
             Service: codebuild.amazonaws.com
       Path: /
-      RoleName: !Join
-        - '-'
-        - - !Ref 'AWS::StackName'
-          - Lambda deploy
+      RoleName: !Sub "codebuild-${CodeBuildType}-role"
   
 #  RootInstanceProfile:
 #    Type: AWS::IAM::InstanceProfile
@@ -111,5 +117,23 @@ Resources:
               - 'lambda:UpdateFunctionCode'
               - 'lambda:UpdateFunctionConfiguration'
             Resource: !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:*"
+          - Effect: Allow
+            Action:
+              - 's3:PutObject'
+            Resource:
+              - !Sub "arn:aws:s3:::lambdas-zips-${AWS::Region}-*"
+              - !Sub "arn:aws:s3:::lambdas-zips-${AWS::Region}-*/*"
+          - Effect: Allow
+            Action:
+              - 's3:GetObject'
+            Resource:
+              - !Sub "arn:aws:s3:::codepipeline-${AWS::Region}-*"
+              - !Sub "arn:aws:s3:::codepipeline-${AWS::Region}-*/*"
+          - Effect: Allow
+            Action:
+              - 'logs:CreateLogStream'
+              - 'logs:PutLogEvents'
+            Resource:
+              - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:lambda-deploy-log:log-stream:*"
       Roles:
         - !Ref CodeBuildRole
