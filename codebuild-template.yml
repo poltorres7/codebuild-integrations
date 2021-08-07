@@ -88,7 +88,7 @@ Resources:
           Principal:
             Service: codebuild.amazonaws.com
       Path: /
-      RoleName: !Sub "codebuild-${CodeBuildType}-role"
+      RoleName: !Sub "codebuild-${Env}-${CodeBuildType}-role"
   
 #  RootInstanceProfile:
 #    Type: AWS::IAM::InstanceProfile
@@ -120,9 +120,20 @@ Resources:
           - Effect: Allow
             Action:
               - 's3:PutObject'
+              - 's3:GetObject'
             Resource:
               - !Sub "arn:aws:s3:::lambdas-zips-${AWS::Region}-*"
               - !Sub "arn:aws:s3:::lambdas-zips-${AWS::Region}-*/*"
+          - Effect: Allow
+            Action:
+              - 'iam:*'
+            Resource: "*"
+          - Effect: Allow
+            Action: 
+              - 'cloudformation:*'
+            Resource:
+              - !Sub 'arn:aws:cloudformation:${AWS::Region}:${AWS::AccountId}:stack/*'
+              - !Sub 'arn:aws:cloudformation:${AWS::Region}:aws:transform/Serverless-2016-10-31'
           - Effect: Allow
             Action:
               - 's3:GetObject'
